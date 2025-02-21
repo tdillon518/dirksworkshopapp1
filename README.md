@@ -1,18 +1,18 @@
-# Simple To-Do List with Streamlit
+# Streamlit To-Do List Manager
 
-A minimal to-do list manager built with [Streamlit](https://streamlit.io). 
-Users can add tasks, mark them as complete, and delete them. Tasks are 
-persisted in a local `tasks.json` file.
+A simple yet powerful task management application built with Streamlit.
 
 ## Features
-- **Add** a new task
-- **Complete/Unmark** a task
-- **Delete** a task
-- Automatically **save** tasks to a JSON file
+- ✅ Add new tasks
+- 🚀 Mark tasks as complete/incomplete
+- 🗑️ Delete tasks
+- 💾 Save/Load tasks from JSON file
+- 📊 Task statistics
+- 🎨 Clean and intuitive UI
 
-## Getting Started Locally
+## Installation & Usage
 
-1. **Clone** this repository:
-   ```bash
-   git clone https://github.com/your-username/your-repo.git
-   cd your-repo
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/streamlit-todo-list.git
+cd streamlit-todo-list
