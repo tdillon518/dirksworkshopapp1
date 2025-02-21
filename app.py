@@ -29,10 +29,43 @@ def load_tasks():
 if 'tasks' not in st.session_state:
     st.session_state.tasks = load_tasks()
 
-# Rest of the app code remains the same until the task display section
-# ... [Keep all previous code until task display section] ...
+# App header
+st.title("🚀 Streamlit To-Do List Manager")
+st.markdown("---")
 
-# Modified task display section with safer key handling
+# Add new task section
+st.subheader("➕ Add New Task")
+new_task = st.text_input(
+    "Task description:",
+    value=st.session_state.get('new_task_input', ''),
+    placeholder="Enter your task here...",
+    key="task_input"
+)
+
+col1, col2, col3 = st.columns([2, 3, 2])
+with col1:
+    if st.button("✅ Add Task", use_container_width=True):
+        if new_task.strip():
+            st.session_state.tasks.append({
+                "id": str(uuid.uuid4()),
+                "description": new_task.strip(),
+                "completed": False
+            })
+            st.session_state.new_task_input = ''  # Clear input
+            save_tasks()
+            st.rerun()
+with col2:
+    if st.button("🗑️ Clear All Tasks", use_container_width=True):
+        st.session_state.tasks = []
+        st.session_state.new_task_input = ''
+        save_tasks()
+        st.rerun()
+with col3:
+    if st.button("💾 Save to File", use_container_width=True):
+        save_tasks()
+        st.success("Tasks saved successfully!")
+
+# Display tasks
 if not st.session_state.tasks:
     st.info("🌟 No tasks found! Add a new task above to get started!")
 else:
@@ -47,16 +80,39 @@ else:
                 key=f"check_{task['id']}",
                 on_change=lambda t=task: t.update({'completed': not t['completed']})
             )
-        # Rest of the task display code remains the same
-        # ... [Keep the rest of the display code] ...
+        with cols[1]:
+            if task['completed']:
+                st.markdown(f"<s>{task['description']}</s>", unsafe_allow_html=True)
+            else:
+                st.markdown(task['description'])
+        with cols[2]:
+            if st.button("🔄 Toggle", key=f"toggle_{task['id']}"):
+                task['completed'] = not task['completed']
+                st.rerun()
+        with cols[3]:
+            if st.button("🗑️ Delete", key=f"delete_{task['id']}"):
+                st.session_state.tasks = [t for t in st.session_state.tasks if t['id'] != task['id']]
+                st.rerun()
+    st.markdown("---")
 
-# Modified file upload handler
-def load_tasks_from_file(uploaded_file):
-    try:
-        tasks = json.load(uploaded_file)
-        st.session_state.tasks = [validate_task(task) for task in tasks]
-    except Exception as e:
-        st.error(f"Error loading file: {str(e)}")
+# File management in sidebar
+with st.sidebar:
+    st.header("⚙️ Manage Tasks")
+    st.markdown("---")
+    st.subheader("Load Tasks")
+    uploaded_file = st.file_uploader("Upload tasks file", type=['json'])
+    if uploaded_file is not None:
+        try:
+            tasks = json.load(uploaded_file)
+            st.session_state.tasks = [validate_task(task) for task in tasks]
+            st.rerun()
+        except Exception as e:
+            st.error(f"Error loading file: {str(e)}")
 
-# Keep the rest of the code the same
-# ... [Remainder of the original code] ...
+# Display statistics
+completed_tasks = sum(1 for task in st.session_state.tasks if task['completed'])
+st.sidebar.markdown("---")
+st.sidebar.markdown(f"📊 **Statistics:**\n"
+                    f"- Total tasks: {len(st.session_state.tasks)}\n"
+                    f"- Completed: {completed_tasks}\n"
+                    f"- Remaining: {len(st.session_state.tasks) - completed_tasks}")
