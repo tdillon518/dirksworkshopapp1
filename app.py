@@ -3,12 +3,22 @@ import json
 import uuid
 import os
 
-# Function to ensure all tasks have IDs
+# Function to ensure all tasks have required fields
 def validate_task(task):
-    if 'id' not in task:
-        task['id'] = str(uuid.uuid4())
-    if 'completed' not in task:
-        task['completed'] = False
+    if not isinstance(task, dict):
+        task = {"description": str(task)}
+    
+    defaults = {
+        'id': str(uuid.uuid4()),
+        'completed': False,
+        'description': ''
+    }
+    
+    # Update task with any missing default values
+    for key, value in defaults.items():
+        if key not in task:
+            task[key] = value
+    
     return task
 
 # Function to save tasks to file
@@ -54,12 +64,14 @@ with col1:
             st.session_state.new_task_input = ''  # Clear input
             save_tasks()
             st.rerun()
+
 with col2:
     if st.button("🗑️ Clear All Tasks", use_container_width=True):
         st.session_state.tasks = []
         st.session_state.new_task_input = ''
         save_tasks()
         st.rerun()
+
 with col3:
     if st.button("💾 Save to File", use_container_width=True):
         save_tasks()
@@ -73,26 +85,35 @@ else:
     for index, task in enumerate(st.session_state.tasks):
         task = validate_task(task)  # Ensure task has required fields
         cols = st.columns([1, 4, 2, 2])
+        
         with cols[0]:
-            st.checkbox(
+            if st.checkbox(
                 "Completed", 
                 value=task['completed'],
-                key=f"check_{task['id']}",
-                on_change=lambda t=task: t.update({'completed': not t['completed']})
-            )
+                key=f"check_{task['id']}"
+            ):
+                task['completed'] = True
+            else:
+                task['completed'] = False
+
         with cols[1]:
             if task['completed']:
                 st.markdown(f"<s>{task['description']}</s>", unsafe_allow_html=True)
             else:
                 st.markdown(task['description'])
+
         with cols[2]:
             if st.button("🔄 Toggle", key=f"toggle_{task['id']}"):
                 task['completed'] = not task['completed']
+                save_tasks()
                 st.rerun()
+
         with cols[3]:
             if st.button("🗑️ Delete", key=f"delete_{task['id']}"):
                 st.session_state.tasks = [t for t in st.session_state.tasks if t['id'] != task['id']]
+                save_tasks()
                 st.rerun()
+
     st.markdown("---")
 
 # File management in sidebar
@@ -101,10 +122,12 @@ with st.sidebar:
     st.markdown("---")
     st.subheader("Load Tasks")
     uploaded_file = st.file_uploader("Upload tasks file", type=['json'])
+    
     if uploaded_file is not None:
         try:
             tasks = json.load(uploaded_file)
             st.session_state.tasks = [validate_task(task) for task in tasks]
+            save_tasks()
             st.rerun()
         except Exception as e:
             st.error(f"Error loading file: {str(e)}")
@@ -113,6 +136,6 @@ with st.sidebar:
 completed_tasks = sum(1 for task in st.session_state.tasks if task['completed'])
 st.sidebar.markdown("---")
 st.sidebar.markdown(f"📊 **Statistics:**\n"
-                    f"- Total tasks: {len(st.session_state.tasks)}\n"
-                    f"- Completed: {completed_tasks}\n"
-                    f"- Remaining: {len(st.session_state.tasks) - completed_tasks}")
+                   f"- Total tasks: {len(st.session_state.tasks)}\n"
+                   f"- Completed: {completed_tasks}\n"
+                   f"- Remaining: {len(st.session_state.tasks) - completed_tasks}")
