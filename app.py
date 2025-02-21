@@ -84,11 +84,11 @@ else:
     st.subheader("📝 Your Tasks:")
     for index, task in enumerate(st.session_state.tasks):
         task = validate_task(task)  # Ensure task has required fields
-        cols = st.columns([1, 4, 2, 2])
+        cols = st.columns([0.8, 4, 1, 1])
         
         with cols[0]:
-            if st.checkbox(
-                "Completed", 
+                st.checkbox(
+                "✓",  # Changed label to a checkmark symbol
                 value=task['completed'],
                 key=f"check_{task['id']}"
             ):
